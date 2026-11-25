@@ -1,6 +1,6 @@
 # Relatório de qualidade da carga
 
-Gerado pelo pipeline em 2026-11-17T16:18:17. Regras V1–V9 e T1–T12: ver `docs/RASTREABILIDADE.md`.
+Gerado pelo pipeline em 2026-11-25T13:31:48. Regras V1–V9 e T1–T12: ver `docs/RASTREABILIDADE.md`.
 
 ## 1. Linhas por arquivo
 

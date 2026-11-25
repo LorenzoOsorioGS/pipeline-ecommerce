@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import json
 import logging
+import sys
 from decimal import Decimal
+from pathlib import Path
 
 import pandas as pd
 from pymongo import MongoClient, UpdateOne
@@ -17,8 +19,13 @@ from pymongo.collection import Collection
 from pymongo.database import Database
 from pymongo.errors import BulkWriteError, CollectionInvalid
 
-from . import config
-from .transform import montar_documento_meta, montar_documento_pedido
+if __package__:  # importado como parte do pacote (python src/main.py)
+    from . import config
+    from .transform import montar_documento_meta, montar_documento_pedido
+else:  # rodado direto: põe src/ no caminho para achar o pacote
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from pipeline import config
+    from pipeline.transform import montar_documento_meta, montar_documento_pedido
 
 log = logging.getLogger("load")
 
@@ -156,3 +163,10 @@ def carregar(db: Database, tamanho_lote: int) -> dict:
     log.info("índices garantidos em pedidos: %s", ", ".join(n for _, n in INDICES_PEDIDOS))
 
     return {"pedidos": r_pedidos, "metas_mensais": r_metas, "conciliacao": conciliar(db)}
+
+
+if __name__ == "__main__":
+    cfg = config.carregar()
+    config.configurar_logging(cfg.log_level)
+    resultado = carregar(conectar(cfg.mongo_uri, cfg.mongo_db), cfg.batch_size)
+    sys.exit(0 if resultado["conciliacao"]["ok"] else 1)  # mesmo código de saída do main.py

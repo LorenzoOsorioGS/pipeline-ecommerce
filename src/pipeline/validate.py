@@ -8,14 +8,20 @@ from __future__ import annotations
 import json
 import logging
 import re
+import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
 
-from . import config
-from .referencias import CATEGORIAS, CIDADE_ESTADO, CORRECOES_CIDADE_ESTADO, SUBCATEGORIAS
+if __package__:  # importado como parte do pacote (python src/main.py)
+    from . import config
+    from .referencias import CATEGORIAS, CIDADE_ESTADO, CORRECOES_CIDADE_ESTADO, SUBCATEGORIAS
+else:  # rodado direto: põe src/ no caminho para achar o pacote
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from pipeline import config
+    from pipeline.referencias import CATEGORIAS, CIDADE_ESTADO, CORRECOES_CIDADE_ESTADO, SUBCATEGORIAS
 
 log = logging.getLogger("validate")
 PASTA_VALIDADO = config.DATA_PROCESSED / "_validado"
@@ -193,3 +199,12 @@ def salvar(v: Validacao) -> dict:
     }
     (PASTA_VALIDADO / "validacao.json").write_text(json.dumps(stats, indent=2, ensure_ascii=False), encoding="utf-8")
     return stats
+
+
+if __name__ == "__main__":
+    from pipeline import relatorio
+
+    cfg = config.carregar()
+    config.configurar_logging(cfg.log_level)
+    relatorio.escrever(salvar(validar()))
+    log.info("linhas aprovadas em %s; relatório em %s", PASTA_VALIDADO, relatorio.DESTINO)

@@ -2,7 +2,14 @@
 o que a transformação corrigiu e o que foi marcado (sem remover)."""
 from __future__ import annotations
 
-from . import config
+import sys
+from pathlib import Path
+
+if __package__:  # importado como parte do pacote (python src/main.py)
+    from . import config
+else:  # rodado direto: põe src/ no caminho para achar o pacote
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from pipeline import config
 
 DESTINO = config.OUTPUT / "relatorio_qualidade.md"
 
@@ -53,3 +60,10 @@ def escrever(val: dict, trans: dict | None = None) -> None:
     L += ["", "## 5. Alertas", ""]
     L += [f"- {a}" for a in val["alertas"]] or ["Nenhum."]
     DESTINO.write_text("\n".join(L) + "\n", encoding="utf-8")
+
+
+if __name__ == "__main__":
+    # não é uma etapa: o relatório usa o resultado em memória da validação e da transformação
+    print("relatorio.py não é uma etapa do pipeline. O relatório é escrito por validate e transform:\n"
+          "  python src/main.py --step all   (ou rode src/pipeline/transform.py)\n"
+          f"Saída: {DESTINO}")

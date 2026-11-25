@@ -8,7 +8,14 @@ combinação mais comum = Clothing sozinho (195), depois as três categorias jun
 """
 from __future__ import annotations
 
-from .comum import AZUL, TINTA_2, estilo_eixo, exportar_csv, figura, rodar, salvar_png
+import sys
+from pathlib import Path
+
+if __package__:  # importado como parte do pacote (python src/main.py)
+    from .comum import AZUL, TINTA_2, estilo_eixo, exportar_csv, figura, rodar, salvar_png
+else:  # rodado direto: põe src/ no caminho para achar o pacote
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    from pipeline.analyses.comum import AZUL, TINTA_2, estilo_eixo, exportar_csv, figura, rodar, salvar_png
 
 SAIDA = "analytics_venda_casada"
 
@@ -69,3 +76,9 @@ def executar(db) -> dict:
     return {"pedidos_1_item": um_item, "pct_1_item": round(geral, 1), "ticket_1_item": round(t1, 2),
             "ticket_2_mais": round(t2, 2), "combinacao_mais_comum": f"{combos.iloc[0]['categorias']} "
             f"({int(combos.iloc[0]['pedidos'])})", "csv": csv, "png": png}
+
+
+if __name__ == "__main__":
+    from pipeline.analyses.comum import executar_sozinha
+
+    executar_sozinha(executar)

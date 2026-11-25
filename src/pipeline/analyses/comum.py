@@ -74,3 +74,13 @@ def salvar_png(fig, nome: str) -> Path:
     fig.savefig(caminho, dpi=150)
     plt.close(fig)
     return caminho
+
+
+def executar_sozinha(executar) -> None:
+    """Roda uma análise fora do main.py (python src/pipeline/analyses/a1_meta_realizado.py)."""
+    from .. import load
+
+    cfg = config.carregar()
+    config.configurar_logging(cfg.log_level)
+    r = executar(load.conectar(cfg.mongo_uri, cfg.mongo_db))
+    log.info("%s | %s", r["png"].name, ", ".join(f"{k}={v}" for k, v in r.items() if k not in ("csv", "png")))

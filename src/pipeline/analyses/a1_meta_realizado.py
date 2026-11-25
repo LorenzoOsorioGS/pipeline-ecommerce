@@ -7,7 +7,14 @@ Furniture 95,7%; 5 metas batidas com lucro negativo.
 """
 from __future__ import annotations
 
-from .comum import AZUL, CINZA, TINTA_2, estilo_eixo, exportar_csv, figura, rodar, salvar_png
+import sys
+from pathlib import Path
+
+if __package__:  # importado como parte do pacote (python src/main.py)
+    from .comum import AZUL, CINZA, TINTA_2, estilo_eixo, exportar_csv, figura, rodar, salvar_png
+else:  # rodado direto: põe src/ no caminho para achar o pacote
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    from pipeline.analyses.comum import AZUL, CINZA, TINTA_2, estilo_eixo, exportar_csv, figura, rodar, salvar_png
 
 SAIDA = "analytics_meta_realizado"
 
@@ -74,3 +81,9 @@ def executar(db) -> dict:
 
     return {"linhas": len(df), "metas_batidas": int(df["bateu"].sum()),
             "batidas_com_prejuizo": int((df["bateu"] & (df["lucro"] < 0)).sum()), "csv": csv, "png": png}
+
+
+if __name__ == "__main__":
+    from pipeline.analyses.comum import executar_sozinha
+
+    executar_sozinha(executar)

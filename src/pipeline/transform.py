@@ -10,13 +10,21 @@ import hashlib
 import hmac
 import json
 import logging
+import sys
 from decimal import ROUND_HALF_UP, Decimal
+from pathlib import Path
 
 import pandas as pd
 
-from . import config
-from .referencias import CORRECOES_CIDADE_ESTADO
-from .validate import PASTA_VALIDADO
+if __package__:  # importado como parte do pacote (python src/main.py)
+    from . import config
+    from .referencias import CORRECOES_CIDADE_ESTADO
+    from .validate import PASTA_VALIDADO
+else:  # rodado direto: põe src/ no caminho para achar o pacote
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from pipeline import config
+    from pipeline.referencias import CORRECOES_CIDADE_ESTADO
+    from pipeline.validate import PASTA_VALIDADO
 
 log = logging.getLogger("transform")
 CENTAVO = Decimal("0.01")
@@ -280,3 +288,14 @@ def transformar(chave_hmac: bytes) -> dict:
              len(pedidos), len(itens), len(metas))
     stats.update({"pedidos": len(pedidos), "itens": len(itens), "metas": len(metas)})
     return stats
+
+
+if __name__ == "__main__":
+    from pipeline import relatorio
+
+    cfg = config.carregar()
+    config.configurar_logging(cfg.log_level)
+    stats = transformar(cfg.hmac_key)
+    val = json.loads((PASTA_VALIDADO / "validacao.json").read_text(encoding="utf-8"))
+    relatorio.escrever(val, stats)
+    log.info("relatório de qualidade atualizado: %s", relatorio.DESTINO)

@@ -10,10 +10,15 @@ import hashlib
 import json
 import logging
 import shutil
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from . import config
+if __package__:  # importado como parte do pacote (python src/main.py --step extract)
+    from . import config
+else:  # rodado direto (python src/pipeline/extract.py): põe src/ no caminho para achar o pacote
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from pipeline import config
 
 log = logging.getLogger("extract")
 
@@ -72,3 +77,9 @@ def extrair(modo: str = "auto", destino: Path = config.DATA_RAW) -> dict:
     (destino / "manifesto.json").write_text(json.dumps(manifesto, indent=2, ensure_ascii=False), encoding="utf-8")
     log.info("manifesto gravado em %s (origem: %s)", destino / "manifesto.json", origem)
     return manifesto
+
+
+if __name__ == "__main__":
+    cfg = config.carregar()
+    config.configurar_logging(cfg.log_level)
+    extrair(cfg.extract_mode)
